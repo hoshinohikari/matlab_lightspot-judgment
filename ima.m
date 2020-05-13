@@ -1,43 +1,43 @@
 J = imread('image.jpg');
+%J = imresize(J, 0.5, 'nearest');
 figure;
 imshow(J);
 [P, rect] = imcrop(J);
 imshow(P);
 imwrite(P, 'temp.jpg');
 
-temp_img = imread('temp.jpg');
-src_img = imread('image.jpg');
+reource_p = imread('image.jpg');
+reource_p_sub = imread('temp.jpg');
+[m, n] = size(reource_p);
+[m0, n0] = size(reource_p_sub);
+result = zeros(m - m0 + 1, n - n0 + 1);
+vec_sub = double(reource_p_sub(:));
+norm_sub = norm(vec_sub);
 
-temp = graythresh(temp_img); temp = im2double(temp);
-src = graythresh(src_img); src = im2double(src);
+for i = 1:m - m0 + 1
 
-figure('name', 'result'),
-subplot(1, 2, 1), imshow(temp_img), title('temp'),
-
-tempSize = size(temp);
-tempHeight = tempSize(1); tempWidth = tempSize(2);
-srcSize = size(src);
-srcHeight = srcSize(1); srcWidth = srcSize(2);
-
-srcExpand = padarray(src, [tempHeight - 1 tempWidth - 1], 'post');
-
-distance = zeros(srcSize);
-
-for height = 1:srcHeight
-
-    for width = 1:srcWidth
-        tmp = srcExpand(height:(height + tempHeight - 1), width:(width + tempWidth - 1));
-        distance(height, width) = sum(sum(temp' * tmp - 0.5 .* (tmp' * tmp)));
+    for j = 1:n - n0 + 1
+        subMatr = reource_p(i:i + m0 - 1, j:j + n0 - 1);
+        vec = double(subMatr(:));
+        result(i, j) = vec' * vec_sub / (norm(vec) * norm_sub + eps);
     end
 
 end
 
-maxDis = max(max(distance));
-[x, y] = find(distance == maxDis);
-
-subplot(1, 2, 2), imshow(src_img); title('匹配结果'), hold on
-rectangle('Position', [x y tempWidth tempHeight], 'LineWidth', 2, 'LineStyle', '--', 'EdgeColor', 'r'),
-hold off
+%找到最大相关位置
+[iMaxPos, jMaxPos] = find(result == max(result(:)));
+figure,
+subplot(121); imshow(reource_p_sub), title('temp');
+subplot(122);
+imshow(reource_p);
+title('result'),
+hold on
+plot(jMaxPos, iMaxPos, '*'); %绘制最大相关点
+%用矩形框标记出匹配区域
+plot([jMaxPos, jMaxPos + n0 - 1], [iMaxPos, iMaxPos]);
+plot([jMaxPos + n0 - 1, jMaxPos + n0 - 1], [iMaxPos, iMaxPos + m0 - 1]);
+plot([jMaxPos, jMaxPos + n0 - 1], [iMaxPos + m0 - 1, iMaxPos + m0 - 1]);
+plot([jMaxPos, jMaxPos], [iMaxPos, iMaxPos + m0 - 1]);
 
 level = graythresh(P);
 I = imbinarize(P, level);
