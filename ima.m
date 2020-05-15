@@ -1,11 +1,3 @@
-J = imread('image.jpg');
-%J = imresize(J, 0.5, 'nearest');
-figure;
-imshow(J);
-[P, rect] = imcrop(J);
-imshow(P);
-imwrite(P, 'temp.jpg');
-
 reource_p = imread('image.jpg');
 reource_p_sub = imread('temp.jpg');
 [m, n] = size(reource_p);
@@ -24,7 +16,6 @@ for i = 1:m - m0 + 1
 
 end
 
-%找到最大相关位置
 [iMaxPos, jMaxPos] = find(result == max(result(:)));
 figure,
 subplot(121); imshow(reource_p_sub), title('temp');
@@ -32,16 +23,18 @@ subplot(122);
 imshow(reource_p);
 title('result'),
 hold on
-plot(jMaxPos, iMaxPos, '*'); %绘制最大相关点
-%用矩形框标记出匹配区域
+plot(jMaxPos, iMaxPos, '*');
 plot([jMaxPos, jMaxPos + n0 - 1], [iMaxPos, iMaxPos]);
 plot([jMaxPos + n0 - 1, jMaxPos + n0 - 1], [iMaxPos, iMaxPos + m0 - 1]);
 plot([jMaxPos, jMaxPos + n0 - 1], [iMaxPos + m0 - 1, iMaxPos + m0 - 1]);
 plot([jMaxPos, jMaxPos], [iMaxPos, iMaxPos + m0 - 1]);
 
+P = imcrop(reource_p, [jMaxPos, iMaxPos, n0 - 1, m0 - 1]);
+figure;
+imshow(P);
+
 level = graythresh(P);
 I = imbinarize(P, level);
-%L = bwlabel(I);
 L = I;
 stats = regionprops(L, {'Area', 'ConvexHull', 'MajorAxisLength', ...
     'MinorAxisLength', 'Eccentricity', 'Centroid'});
@@ -58,7 +51,7 @@ figure;
 imshow(I1);
 hold on;
 temp = stats(ind).ConvexHull;
-t = linspace(0, 2 * pi, 7);
+t = linspace(0, 2 * pi, 500);
 c1 = stats(ind).Centroid;
 a1 = stats(ind).MajorAxisLength;
 b1 = stats(ind).MinorAxisLength;
